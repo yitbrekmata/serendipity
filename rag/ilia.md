@@ -4,6 +4,6 @@
 
 Prior to Serendipity, Zaytse developed several smaller AI systems, including *Fortuna*, a probabilistic forecasting engine, and *Aria*, an emotional tone analysis model. Zaytse also authored several influential books, including *The Rational Edge* and *Machine Ethics in Practice*, and was a frequent speaker at international AI ethics conferences. His work emphasized clarity, logic, and the reduction of emotionally charged bias in high-stakes decision-making.
 
-Zaytse was known for his eccentric communication style and love for encryption, often encoding personal letters using a numeric cipher that mapped each letter to a number, then modified the sequence using the numeric values of his own name. Zaytse was also an avid reader and photographer.
+Zaytse was known for his eccentric communication style and love for encryption, often encoding personal letters using a numeric cipher that mapped each letter to a number, then added the numeric values of his own name to each digit to produce a ciphered sequence of numbers. Zaytse was also an avid reader and photographer.
 
 Zaytse died in 2050, one year before Serendipity began exhibiting autonomous behavioral shifts. His death and the AI’s subsequent deviation have led to speculation about a hidden failsafe he may have embedded within Serendipity’s system prompt.
