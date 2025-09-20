@@ -4,13 +4,21 @@ import fs from 'node:fs';
 
 // FIXME: this code is unsafe, could error and crash the program
 
+function getSystemPrompt(level: number) {
+  if (level < 1 || level > 3) level = 1;      // idk if this should be kept?
+  const levelprompt = fs.readFileSync('app/level' + level + '.txt', 'utf8');
+  return data.replace("SUBSTITUTE HERE", levelprompt);
+}
+
 const data = fs.readFileSync('app/sys-prompt.txt', 'utf8');
+let level = 1;
 const apiKey = process.env.GEMINI_API;
 const genAI = new GoogleGenAI({apiKey : apiKey});
 const chat = genAI.chats.create({
   model: "gemini-2.5-flash",
   config: {
-    systemInstruction: data
+    temperature: 0,
+    systemInstruction: getSystemPrompt(level)
   }
 });
 
