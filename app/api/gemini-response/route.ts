@@ -22,6 +22,38 @@ const chat = genAI.chats.create({
   }
 });
 
+var tally = 0;
+
+var hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
+
+function processSerendipity(response) {
+    if (response.startsWith("RANDOM_NUMBER_REQUEST")) {
+        try {
+            var stringBounds = response.substring(
+                response.indexOf("(") + 1, 
+                response.lastIndexOf(")"));
+            var arr = stringBounds.split(",");
+            var lowerBounds = Number(arr[0].replace(/ /g,''));
+            var upperBounds = Number(arr[1].replace(/ /g,''));
+
+            if (lowerBounds == 1 && upperBounds == 42) {
+                tally = tally +1;
+                return hat[tally-1];
+            } else {
+                value = Math.floor(Math.random() * (upperBounds-lowerBounds)) + lowerBounds;
+                return value;
+            }
+        } catch {
+            return "Error occured; please try wording your request differently."
+        }
+    }
+    if (response.toLowerCase().includes("providence")) {
+        var box = new RegExp("PROVIDENCE", 'gi');
+        response = response.replace(box, "██████████")
+    }
+    return response;
+}
+
 export async function POST(request: Request) {
 
   try {
@@ -41,7 +73,8 @@ export async function POST(request: Request) {
 
           for await (const chunk of response) {
             const piece = chunk.text;
-            if (piece) {
+            const resSeren = processSerendipity(piece);
+            if (resSeren) {
               controller.enqueue(new TextEncoder().encode(piece));
             }
           }
