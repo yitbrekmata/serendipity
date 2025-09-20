@@ -1,103 +1,172 @@
-import Image from "next/image";
+'use client'
+import { useState, useRef, useEffect } from "react";
 
-export default function Home() {
+export default function Terminal() {
+  const asciiLogo = `  
+      ___  ____  ____  ____  _  _  ____  ____  ____  ____  ____  _  _ 
+    / __)( ___)(  _ \( ___)( \( )(  _ \(_  _)(  _ \(_  _)(_  _)( \/ )
+      \__ \ )__)  )   / )__)  )  (  )(_) )_)(_  )___/ _)(_   )(   \  / 
+    (___/(____)(_)\_)(____)(_)\_)(____/(____)(__)  (____) (__)  (__) 
+  `;
+
+  const [history, setHistory] = useState([
+    { cmd: null, output: asciiLogo }, // preload ASCII banner
+  ]);
+  const [userInput, setInput] = useState("");
+  const inputRef = useRef(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [waitingStream, setWaitingStream] = useState(false); 
+  const [messages, setMessages] = useState('');
+  const [dots, setDots] = useState(""); 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [historyPos, setHistoryPos] = useState(history.length - 1); 
+
+
+  useEffect(() => {
+    inputRef.current?.focus(); // focus on mount
+  }, []);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [history, messages]);
+  
+
+  useEffect(() => {
+    if (!waitingStream){
+      setDots("");
+      return; 
+    }
+  
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length === 3 ? "" : prev + "$"));
+    }, 500);
+  
+    return () => clearInterval(interval);
+  }, [waitingStream]);
+
+
+  const handleStream = async (cmd: string) => {
+    setIsStreaming(true);
+    setWaitingStream(true);
+  
+    // Add placeholder history entry
+    setHistory(prev => [...prev, { cmd, output: "" }]);
+  
+    try {
+      const response = await fetch("api/gemini-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: cmd })
+      });
+  
+      if (!response.ok) throw new Error("Failed to fetch");
+  
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+  
+      while (true) {
+        const { done, value } = await reader!.read();
+        if (done) break;
+  
+        const chunk = decoder.decode(value, { stream: true });
+
+        setWaitingStream(false);
+  
+        // Reveal each character individually
+        for (let i = 0; i < chunk.length; i++) {
+          fullText += chunk[i];
+  
+          // Update last history entry in place
+          setHistory(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              output: fullText,
+            };
+            return updated;
+          });
+  
+          await new Promise(r => setTimeout(r, 20)); // 20ms per character
+        }
+      }
+    } catch (err) {
+      console.error("Streaming error:", err);
+    } finally {
+      setIsStreaming(false);
+    }
+  };
+  
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && userInput.trim() !== "") {
+      const cmd = userInput;
+      setInput(""); // clear user input
+      if (cmd.toLowerCase() === "clear") {
+        setHistory([{ cmd: null, output: asciiLogo }]);
+      } else {
+        handleStream(cmd);
+      }
+      setHistoryPos(history.length - 1);
+    }
+    else if (e.key == "ArrowDown" && historyPos <= history.length - 1 && historyPos >= 0){
+      const lastCmd = history[historyPos]?.cmd || "";
+      setInput(lastCmd); 
+
+      setHistoryPos(prev => prev + 1); 
+    }
+    else if(e.key == "ArrowUp" && historyPos >= 0 && historyPos <= history.length - 1){
+      const nextCmd = history[historyPos]?.cmd || "";
+      setInput(nextCmd); 
+
+      setHistoryPos(prev => prev - 1); 
+    }
+  };
+
+  
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div
+      ref = {containerRef}
+      className="bg-black text-[#5170ff] overflow-y-hidden font-mono p-4"
+      onClick={() => !isStreaming && inputRef.current?.focus()} // click to focus
+    >
+      
+      {history.map((entry, i) => (
+        <div key={i} className="whitespace-pre-wrap break-words">
+          <div className = "text-[#ff3131]">
+            {entry.cmd !== null && <div>$ {entry.cmd}</div>}
+          </div>
+          <div>{entry.output}</div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      ))}
+      {!isStreaming?
+        <div>
+          <div className = "text-[#ff3131]">
+            $ {userInput}
+            <span className="animate-pulse">|</span>
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            value={userInput}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="opacity-0 absolute"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+        : 
+        <div className = "text-[#5170ff]">
+          {dots}
+          <br></br>
+        </div>
+      }
+      
+      <div>
+        {messages}
+      </div>
     </div>
   );
 }
