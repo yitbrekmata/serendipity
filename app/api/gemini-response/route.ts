@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const { prompt } = await request.json();
 
-    const apiKey = "AIzaSyCWdiGBtzZkoEKzdX9thAbW06jsb7TV370";
+    const apiKey = process.env.GEMINI_API;
     if (!apiKey) {
       return new Response("Missing GEMINI_API_KEY", { status: 500 });
     }
