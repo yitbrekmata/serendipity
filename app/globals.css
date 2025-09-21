@@ -120,3 +120,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+.neon-blue {
+  color: #5170ff;
+  text-shadow: 0 0 5px #5170ff, 0 0 10px #5170ff, 0 0 20px #5170ff, 0 0 40px #5170ff;
+}
+
+.neon-hover {
+  color: #5170ff;
+  transition: text-shadow 0.3s ease;
+}
+
+.neon-hover:hover {
+  text-shadow: 0 0 5px #5170ff,
+               0 0 10px #5170ff,
+               0 0 20px #5170ff,
+               0 0 40px #5170ff;
+}

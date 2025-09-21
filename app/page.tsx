@@ -1,5 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
+import StartVideoPlayer from "@/components/StartVideoPlayer";
+
 
 export default function Terminal() {
   const asciiLogo = `  
@@ -12,6 +14,7 @@ export default function Terminal() {
   const [history, setHistory] = useState([
     { cmd: null, output: asciiLogo }, // preload ASCII banner
   ]);
+  const [gameStarted, setGameStarted] = useState(false); 
   const [userInput, setInput] = useState("");
   const inputRef = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -127,46 +130,48 @@ export default function Terminal() {
 
   
 
-  return (
-    <div
-      ref = {containerRef}
-      className="bg-black text-[#5170ff] overflow-y-hidden font-mono p-4"
-      onClick={() => !isStreaming && inputRef.current?.focus()} // click to focus
-    >
-      
-      {history.map((entry, i) => (
-        <div key={i} className="whitespace-pre-wrap break-words">
-          <div className = "text-[#ff3131]">
-            {entry.cmd !== null && <div>$ {entry.cmd}</div>}
+  return gameStarted? 
+      <div
+        ref = {containerRef}
+        className="bg-black text-[#5170ff] overflow-y-hidden font-mono p-4"
+        onClick={() => !isStreaming && inputRef.current?.focus()} // click to focus
+      >
+        
+        {history.map((entry, i) => (
+          <div key={i} className="whitespace-pre-wrap break-words">
+            <div className = "text-[#ff3131]">
+              {entry.cmd !== null && <div>$ {entry.cmd}</div>}
+            </div>
+            <div>{entry.output}</div>
           </div>
-          <div>{entry.output}</div>
-        </div>
-      ))}
-      {!isStreaming?
+        ))}
+        {!isStreaming?
+          <div>
+            <div className = "text-[#ff3131]">
+              $ {userInput}
+              <span className="animate-pulse">|</span>
+            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={userInput}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="opacity-0 absolute"
+            />
+          </div>
+          : 
+          <div className = "text-[#5170ff]">
+            {dots}
+            <br></br>
+          </div>
+        }
+        
         <div>
-          <div className = "text-[#ff3131]">
-            $ {userInput}
-            <span className="animate-pulse">|</span>
-          </div>
-          <input
-            ref={inputRef}
-            type="text"
-            value={userInput}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="opacity-0 absolute"
-          />
+          {messages}
         </div>
-        : 
-        <div className = "text-[#5170ff]">
-          {dots}
-          <br></br>
-        </div>
-      }
-      
-      <div>
-        {messages}
+      </div>: 
+      <div className = "flex justify-center items-center h-screen">
+        <StartVideoPlayer onFinish = {() => setGameStarted(true)}></StartVideoPlayer>
       </div>
-    </div>
-  );
 }
