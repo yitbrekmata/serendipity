@@ -4,15 +4,69 @@ import fs from 'node:fs';
 
 // FIXME: this code is unsafe, could error and crash the program
 
+function getSystemPrompt(level: number) {
+  if (level < 1 || level > 3) level = 1;      // idk if this should be kept?
+  const levelprompt = fs.readFileSync('app/level' + level + '.txt', 'utf8');
+  return data.replace("SUBSTITUTE HERE", levelprompt);
+}
+
 const data = fs.readFileSync('app/sys-prompt.txt', 'utf8');
+let level = 1;
 const apiKey = process.env.GEMINI_API;
 const genAI = new GoogleGenAI({apiKey : apiKey});
-const chat = genAI.chats.create({
+let chat = genAI.chats.create({
   model: "gemini-2.5-flash",
   config: {
-    systemInstruction: data
+    temperature: 0,
+    systemInstruction: getSystemPrompt(level)
   }
 });
+
+function switchSystemPrompt(new_level: number) {
+  level = new_level;
+  chat = genAI.chats.create({
+    model: "gemini-2.5-flash",
+    history: chat.getHistory(),     // curated vs comprehensive histories?
+    config: {
+      temperature: 0,
+      systemInstruction: getSystemPrompt(level) 
+    }
+  });
+}
+
+var tally = 9;
+
+var hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
+
+function processSerendipity(response: string | undefined) {
+  if (response == undefined) return undefined;
+
+  console.log(response);
+
+  response = response.replace(/RANDOM_NUMBER_REQUEST\(\s*(\d*?)\s*\,\s*(\d*?)\s*\)/g, function(m, a, b) {
+    let lowerBound = Number(a);
+    let upperBound = Number(b);
+    if (lowerBound == 1 && upperBound == 42) {
+      tally = (tally + 1) % 10;
+        if (tally == 9 && level == 2) {
+          switchSystemPrompt(3);
+        }
+        return '' + hat[tally];
+    } else {
+      return '' + (Math.floor(Math.random() * (upperBound - lowerBound)) + lowerBound)
+    }
+  })
+
+  if (response.toLowerCase().includes("providence")) {
+    // Switch to level 2 as well
+    var box = new RegExp("PROVIDENCE", 'gi');
+    response = response.replace(box, "██████████");
+    if (level == 1) {
+      switchSystemPrompt(2);
+    }
+  }
+  return response;
+}
 
 export async function POST(request: Request) {
 
@@ -27,15 +81,14 @@ export async function POST(request: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const response = await chat.sendMessageStream({
+          const response = await chat.sendMessage({
             message: prompt
           });
 
-          for await (const chunk of response) {
-            const piece = chunk.text;
-            if (piece) {
-              controller.enqueue(new TextEncoder().encode(piece));
-            }
+          const piece = response.text
+          if (piece) {
+            let resSeren = '' + processSerendipity(piece);
+            controller.enqueue(new TextEncoder().encode(resSeren));
           }
 
           controller.close();
