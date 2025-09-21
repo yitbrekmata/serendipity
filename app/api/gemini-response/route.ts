@@ -2,6 +2,12 @@
 import { GoogleGenAI } from "@google/genai";
 import fs from 'node:fs';
 
+// RAG Imports
+
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
 // FIXME: this code is unsafe, could error and crash the program
 
 function getSystemPrompt(level: number) {
@@ -21,6 +27,16 @@ let chat = genAI.chats.create({
     systemInstruction: getSystemPrompt(level)
   }
 });
+
+// RAG initialization
+
+const lore = fs.readFileSync('app/lore.txt', 'utf-8');
+const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 300, chunkOverlap: 30 });
+const chunks = await splitter.splitText(lore);
+const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey, model: "models/gemini-embedding-001" });
+const vectorStore = await MemoryVectorStore.fromTexts(chunks, {}, embeddings);
+
+// System prompt handling
 
 function switchSystemPrompt(new_level: number) {
   level = new_level;
@@ -81,8 +97,11 @@ export async function POST(request: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // RAG
+          const docs = await vectorStore.similaritySearch(prompt, 5);
+          const context = docs.map(d => d.pageContent).join("\n");
           const response = await chat.sendMessage({
-            message: prompt
+            message: `Context:\n${context}\n\nUser Query:\n${prompt}`
           });
 
           const piece = response.text
