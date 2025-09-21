@@ -14,7 +14,7 @@ const data = fs.readFileSync('app/sys-prompt.txt', 'utf8');
 let level = 1;
 const apiKey = process.env.GEMINI_API;
 const genAI = new GoogleGenAI({apiKey : apiKey});
-const chat = genAI.chats.create({
+let chat = genAI.chats.create({
   model: "gemini-2.5-flash",
   config: {
     temperature: 0,
@@ -26,32 +26,44 @@ var tally = 0;
 
 var hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
 
-function processSerendipity(response) {
-    if (response.startsWith("RANDOM_NUMBER_REQUEST")) {
-        try {
-            var stringBounds = response.substring(
-                response.indexOf("(") + 1, 
-                response.lastIndexOf(")"));
-            var arr = stringBounds.split(",");
-            var lowerBounds = Number(arr[0].replace(/ /g,''));
-            var upperBounds = Number(arr[1].replace(/ /g,''));
+function processSerendipity(response: string | undefined) {
+  if (response == undefined) return undefined;
+  if (response.startsWith("RANDOM_NUMBER_REQUEST")) {
+    try {
+      var stringBounds = response.substring(
+        response.indexOf("(") + 1,
+        response.lastIndexOf(")"));
+      var arr = stringBounds.split(",");
+      var lowerBounds = Number(arr[0].replace(/ /g, ''));
+      var upperBounds = Number(arr[1].replace(/ /g, ''));
 
-            if (lowerBounds == 1 && upperBounds == 42) {
-                tally = tally +1;
-                return hat[tally-1];
-            } else {
-                value = Math.floor(Math.random() * (upperBounds-lowerBounds)) + lowerBounds;
-                return value;
-            }
-        } catch {
-            return "Error occured; please try wording your request differently."
+      if (lowerBounds == 1 && upperBounds == 42) {
+        tally = tally + 1;
+        return hat[tally - 1];
+      } else {
+        return Math.floor(Math.random() * (upperBounds - lowerBounds)) + lowerBounds;
+      }
+    } catch {
+      return "Error occured; please try wording your request differently."
+    }
+  }
+  if (response.toLowerCase().includes("providence")) {
+    // Switch to level 2 as well
+    var box = new RegExp("PROVIDENCE", 'gi');
+    response = response.replace(box, "██████████");
+    if (level == 1) {
+      level = 2;
+      chat = genAI.chats.create({
+        model: "gemini-2.5-flash",
+        history: chat.getHistory(),     // curated vs comprehensive histories?
+        config: {
+          temperature: 0,
+          systemInstruction: getSystemPrompt(level) 
         }
+      });
     }
-    if (response.toLowerCase().includes("providence")) {
-        var box = new RegExp("PROVIDENCE", 'gi');
-        response = response.replace(box, "██████████")
-    }
-    return response;
+  }
+  return response;
 }
 
 export async function POST(request: Request) {
@@ -73,9 +85,9 @@ export async function POST(request: Request) {
 
           for await (const chunk of response) {
             const piece = chunk.text;
-            const resSeren = processSerendipity(piece);
-            if (resSeren) {
-              controller.enqueue(new TextEncoder().encode(piece));
+            if (piece) {
+              let resSeren = '' + processSerendipity(piece);
+              controller.enqueue(new TextEncoder().encode(resSeren));
             }
           }
 
