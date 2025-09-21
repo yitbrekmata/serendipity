@@ -1,6 +1,7 @@
 // app/api/gemini-response/route.ts
 import { GoogleGenAI } from "@google/genai";
 import fs from 'node:fs';
+import path from "path";
 
 // RAG Imports
 
@@ -10,13 +11,22 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 // FIXME: this code is unsafe, could error and crash the program
 
-function getSystemPrompt(level: number) {
-  if (level < 1 || level > 3) level = 1;      // idk if this should be kept?
-  const levelprompt = fs.readFileSync('app/level' + level + '.txt', 'utf8');
-  return data.replace("SUBSTITUTE HERE", levelprompt);
+// helper to read from public/
+function readPublicFile(fileName: string) {
+  const filePath = path.join(process.cwd(), "public", fileName);
+  return fs.readFileSync(filePath, "utf8");
 }
 
-const data = fs.readFileSync('app/sys-prompt.txt', 'utf8');
+const systemTemplate = readPublicFile("sys-prompt.txt");
+
+export function getSystemPrompt(level: number) {
+  if (level < 1 || level > 3) level = 1;
+
+  const levelPrompt = readPublicFile(`level${level}.txt`);
+
+  return systemTemplate.replace("SUBSTITUTE HERE", levelPrompt);
+}
+
 let level = 1;
 const apiKey = process.env.GEMINI_API;
 const genAI = new GoogleGenAI({apiKey : apiKey});
@@ -30,7 +40,7 @@ let chat = genAI.chats.create({
 
 // RAG initialization
 
-const lore = fs.readFileSync('app/lore.txt', 'utf-8');
+const lore = readPublicFile(`lore.txt`)
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 300, chunkOverlap: 30 });
 const chunks = await splitter.splitText(lore);
 const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey, model: "models/gemini-embedding-001" });
