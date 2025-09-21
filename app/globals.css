@@ -137,3 +137,100 @@
                0 0 20px #5170ff,
                0 0 40px #5170ff;
 }
+
+.neon-red {
+  color: #ff3131;
+  text-shadow: 0 0 5px #ff3131,
+               0 0 10px #ff3131,
+               0 0 20px #ff3131,
+               0 0 40px #ff3131;
+}
+
+.neon-hover-red {
+  color: #ff3131;
+  transition: text-shadow 0.3s ease;
+}
+
+.neon-hover-red:hover {
+  text-shadow: 0 0 5px #ff3131,
+               0 0 10px #ff3131,
+               0 0 20px #ff3131,
+               0 0 40px #ff3131;
+}
+
+.flicker {
+  animation: flicker 5s ease-in-out; 
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 1;
+  }
+  20%, 24%, 55% {
+      opacity: 0;
+  }
+  10%, 30%, 40%, 60%, 70%, 80%, 90% {
+      opacity: 0.3;
+  }
+}
+
+/* Flickering that ends in permanent blackout */
+.flicker-blackout {
+    animation: flicker-blackout 3.5s ease-in-out forwards;
+}
+
+@keyframes flicker-blackout {
+    0%, 18%, 20%, 22%, 24%, 50%, 52%, 85% {
+        opacity: 1;
+    }
+    19%, 23%, 51% {
+        opacity: 0;
+    }
+    9%, 28%, 38%, 55%, 65%, 75% {
+        opacity: 0.3;
+    }
+    90%, 95%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Fade-in animation class */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 5s ease-in forwards;
+}
+
+.fade-in-button{
+  opacity: 0; 
+  animation: fadeIn 2s ease-in forwards;
+}
+
+/* Keyframe animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Alternative with slight scale effect for smoother appearance */
+.fade-in-scale {
+  opacity: 0;
+  transform: scale(0.95);
+  animation: fadeInScale 5s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+

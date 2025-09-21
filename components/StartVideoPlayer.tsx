@@ -9,7 +9,7 @@ export default function StartVideoPlayer({ onFinish }: StartVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const START_TIME = 0;
-  const PAUSE_TIMES = [6, 13, 18, 28];
+  const PAUSE_TIMES = [7, 14, 20, 30];
 
   const [playing, setPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -101,7 +101,7 @@ export default function StartVideoPlayer({ onFinish }: StartVideoPlayerProps) {
         <div className="relative w-full max-w-4xl">
           <video
             ref={videoRef}
-            src="/intro_video_2.mp4"
+            src="/intro_video_3.mp4"
             className="w-full"
             muted
           />
@@ -109,7 +109,7 @@ export default function StartVideoPlayer({ onFinish }: StartVideoPlayerProps) {
           {paused && (
             <button
               onClick={handleNext}
-              className="absolute bottom-4 right-4 bg-black text-[#5170ff] font-mono text-2xl rounded neon-hover"
+              className="absolute bottom-4 right-4 bg-black text-[#5170ff] font-mono text-2xl rounded neon-hover fade-in-button"
             >
               $ Next --{'>'}
             </button>
@@ -118,7 +118,7 @@ export default function StartVideoPlayer({ onFinish }: StartVideoPlayerProps) {
           {finished && (
             <button
               onClick={handlePlay}
-              className="absolute bottom-4 right-4 text-[#5170ff] font-mono text-2xl neon-hover"
+              className="absolute bottom-4 right-4 text-[#5170ff] font-mono text-2xl neon-hover fade-in-button"
             >
               $ Play
             </button>
