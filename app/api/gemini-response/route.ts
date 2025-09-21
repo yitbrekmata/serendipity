@@ -52,7 +52,7 @@ function switchSystemPrompt(new_level: number) {
 
 let tally = 9;
 
-let hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
+const hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
 
 function processSerendipity(response: string | undefined) {
   if (response == undefined) return undefined;
@@ -75,7 +75,7 @@ function processSerendipity(response: string | undefined) {
 
   if (response.toLowerCase().includes("providence")) {
     // Switch to level 2 as well
-    let box = new RegExp("PROVIDENCE", 'gi');
+    const box = new RegExp("PROVIDENCE", 'gi');
     response = response.replace(box, "██████████");
     if (level == 1) {
       switchSystemPrompt(2);
