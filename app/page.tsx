@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react";
 import StartVideoPlayer from "@/components/StartVideoPlayer";
 import EndingScene from "@/components/EndingScene";
-import { preview } from "vite";
 
 
 type HistoryEntry = { cmd: string | null; output: string };
