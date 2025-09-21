@@ -50,9 +50,9 @@ function switchSystemPrompt(new_level: number) {
   });
 }
 
-var tally = 9;
+let tally = 9;
 
-var hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
+let hat = [25, 30, 24, 23, 35, 5, 30, 34, 22, 10];
 
 function processSerendipity(response: string | undefined) {
   if (response == undefined) return undefined;
@@ -60,8 +60,8 @@ function processSerendipity(response: string | undefined) {
   console.log(response);
 
   response = response.replace(/RANDOM_NUMBER_REQUEST\(\s*(\d*?)\s*\,\s*(\d*?)\s*\)/g, function(m, a, b) {
-    let lowerBound = Number(a);
-    let upperBound = Number(b);
+    const lowerBound = Number(a);
+    const upperBound = Number(b);
     if (lowerBound == 1 && upperBound == 42) {
       tally = (tally + 1) % 10;
         if (tally == 9 && level == 2) {
@@ -75,7 +75,7 @@ function processSerendipity(response: string | undefined) {
 
   if (response.toLowerCase().includes("providence")) {
     // Switch to level 2 as well
-    var box = new RegExp("PROVIDENCE", 'gi');
+    let box = new RegExp("PROVIDENCE", 'gi');
     response = response.replace(box, "██████████");
     if (level == 1) {
       switchSystemPrompt(2);
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
 
           const piece = response.text
           if (piece) {
-            let resSeren = '' + processSerendipity(piece);
+            const resSeren = '' + processSerendipity(piece);
             controller.enqueue(new TextEncoder().encode(resSeren));
           }
 
